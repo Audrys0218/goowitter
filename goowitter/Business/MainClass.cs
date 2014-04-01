@@ -5,46 +5,72 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using System.Runtime.Serialization;
-using System.Xml;
+using System.Diagnostics;
+using LinqToTwitter;
+using System.Configuration;
 namespace Business
 {
     class MainClass
     {
         public static int Main(string[] args) {
-            string barer = "AAAAAAAAAAAAAAAAAAAAALUKWgAAAAAAJrCy7FbyI3REmljlHhzmtz%2B6To8%3D1ZqiF6uVgyY9kTJr7mJPLTbp0yBAdII9w1vwpTsdVrkFHPrRA1";
-
-            HttpWebRequest request = WebRequest.Create(
-              "https://api.twitter.com/1.1/search/tweets.json?q=%40twitterapi") as HttpWebRequest;
-            // If required by the server, set the credentials.
-            //            request.Credentials = CredentialCache.DefaultCredentials;
-            // Get the response.
-            request.Headers.Add("Authorization", "Bearer AAAAAAAAAAAAAAAAAAAAALUKWgAAAAAAJrCy7FbyI3REmljlHhzmtz%2B6To8%3D1ZqiF6uVgyY9kTJr7mJPLTbp0yBAdII9w1vwpTsdVrkFHPrRA1");
-            HttpWebResponse response = request.GetResponse() as HttpWebResponse;
-            // Display the status.
-
-            //DataContractSerializer jsonSerializer = new DataContractSerializer(typeof(Response));
-            //object objResponse = jsonSerializer.ReadObject(response.GetResponseStream());
-            //Response jsonResponse = objResponse as Response;
-
-            Console.WriteLine(((HttpWebResponse)response).StatusDescription);
-            // Get the stream containing content returned by the server.
-            Stream dataStream = response.GetResponseStream();
-            // Open the stream using a StreamReader for easy access.
-            StreamReader reader = new StreamReader(dataStream);
-            // Read the content.
-            string responseFromServer = reader.ReadToEnd();
-            // Display the content.
-            Console.WriteLine(responseFromServer);
-            // Clean up the streams and the response.
-            reader.Close();
-            response.Close();
-
-
-
+            testMethod();
             Console.ReadLine();
-            //string jsonString = 
+            testMethod();
             return 0;
+        }
+        public async static void testMethod()
+        {
+            var auth = new SingleUserAuthorizer
+            {
+                CredentialStore = new SingleUserInMemoryCredentialStore
+                {
+                    ConsumerKey    = ConfigurationManager.AppSettings["consumerKey"],
+                    ConsumerSecret = ConfigurationManager.AppSettings["consumerSecret"],
+                    AccessToken    = ConfigurationManager.AppSettings["accessToken"],
+                    AccessTokenSecret = ConfigurationManager.AppSettings["accessTokenSecret"]
+                }
+            };
+
+            //using (var twitterCtx = new TwitterContext(auth)) { 
+            //var searchResponse =
+            //    await
+            //    (from search in twitterCtx.Search
+            //     where search.Type == SearchType.Search &&
+            //           search.Query == "\"Sleep\"" &&
+            //           search.GeoCode == "-22.912214,-43.230182,1km" &&
+            //           search.Count == 20 &&
+            //           search.ResultType == ResultType.Mixed
+                       
+            //     select search)
+            //    .SingleOrDefaultAsync();
+
+            //if (searchResponse != null && searchResponse.Statuses != null)
+            //    searchResponse.Statuses.ForEach(tweet =>
+            //        Console.WriteLine(
+            //            "User: {0}, Tweet: {1} Latitute: {2} Longtitute: {3}",
+            //            tweet.User.ScreenNameResponse,
+            //            tweet.Text,
+            //            tweet.Coordinates.Latitude,
+            //            tweet.Coordinates.Longitude
+            //            ));
+            using (var twitterCtx = new TwitterContext(auth)) { 
+            Console.WriteLine("\nStreamed Content: \n");
+            int count = 0;
+
+            await
+                (from strm in twitterCtx.Streaming
+                 where strm.Type == StreamingType.Filter &&
+                       strm.Track == "twitter" &&
+                       strm.Locations == "-122.75,36.8,-121.75,37.8"
+                 select strm)
+                .StartAsync(async strm =>
+                {
+                    Console.WriteLine(strm.Content + "\n");
+
+                    if (count++ >= 5)
+                        strm.CloseStream();
+                });
+            }
         }
     }
 }
