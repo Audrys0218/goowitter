@@ -31,46 +31,48 @@ namespace Business
                 }
             };
 
-            //using (var twitterCtx = new TwitterContext(auth)) { 
-            //var searchResponse =
-            //    await
-            //    (from search in twitterCtx.Search
-            //     where search.Type == SearchType.Search &&
-            //           search.Query == "\"Sleep\"" &&
-            //           search.GeoCode == "-22.912214,-43.230182,1km" &&
-            //           search.Count == 20 &&
-            //           search.ResultType == ResultType.Mixed
-                       
-            //     select search)
-            //    .SingleOrDefaultAsync();
+            using (var twitterCtx = new TwitterContext(auth))
+            {
+                var searchResponse =
+                    await
+                    (from search in twitterCtx.Search
+                     where search.Type == SearchType.Search &&
+                           search.Query == "\"Sleep\"" &&
+                           search.GeoCode == "-22.912214,-43.230182,1km" &&
+                           search.Count == 20 &&
+                           search.ResultType == ResultType.Mixed
 
-            //if (searchResponse != null && searchResponse.Statuses != null)
-            //    searchResponse.Statuses.ForEach(tweet =>
-            //        Console.WriteLine(
-            //            "User: {0}, Tweet: {1} Latitute: {2} Longtitute: {3}",
-            //            tweet.User.ScreenNameResponse,
-            //            tweet.Text,
-            //            tweet.Coordinates.Latitude,
-            //            tweet.Coordinates.Longitude
-            //            ));
-            using (var twitterCtx = new TwitterContext(auth)) { 
-            Console.WriteLine("\nStreamed Content: \n");
-            int count = 0;
+                     select search)
+                    .SingleOrDefaultAsync();
 
-            await
-                (from strm in twitterCtx.Streaming
-                 where strm.Type == StreamingType.Filter &&
-                       strm.Track == "twitter" &&
-                       strm.Locations == "-122.75,36.8,-121.75,37.8"
-                 select strm)
-                .StartAsync(async strm =>
-                {
-                    Console.WriteLine(strm.Content + "\n");
-
-                    if (count++ >= 5)
-                        strm.CloseStream();
-                });
+                if (searchResponse != null && searchResponse.Statuses != null)
+                    searchResponse.Statuses.ForEach(tweet =>
+                        Console.WriteLine(
+                            "User: {0}, Tweet: {1} Latitute: {2} Longtitute: {3}",
+                            tweet.User.ScreenNameResponse,
+                            tweet.Text,
+                            tweet.Coordinates.Latitude,
+                            tweet.Coordinates.Longitude
+                            ));
             }
+            //using (var twitterCtx = new TwitterContext(auth)) { 
+            //Console.WriteLine("\nStreamed Content: \n");
+            //int count = 0;
+
+            //await
+            //    (from strm in twitterCtx.Streaming
+            //     where strm.Type == StreamingType.Filter &&
+            //           strm.Track == "twitter" &&
+            //           strm.Locations == "-122.75,36.8,-121.75,37.8"
+            //     select strm)
+            //    .StartAsync(async strm =>
+            //    {
+            //        Console.WriteLine(strm.Content + "\n");
+
+            //        if (count++ >= 5)
+            //            strm.CloseStream();
+            //    });
+            //}
         }
     }
 }
