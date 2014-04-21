@@ -13,11 +13,124 @@ namespace Business
     class MainClass
     {
         public static int Main(string[] args) {
-            testMethod();
+            //testMethod();
+            testMethod2();          //finds posts in an interval with specific keyword
+            //testMethod3();
             Console.ReadLine();
-            testMethod();
             return 0;
         }
+
+        public async static void testMethod3()
+        {
+           /* using (var twitterctx = new twittercontext(auth))
+            {
+                console.writeline("\nstreamed content: \n");
+                int count = 0;
+
+                await
+                    (from strm in twitterctx.streaming
+                     where strm.type == streamingtype.filter &&
+                           strm.track == "twitter" &&
+                           strm.locations == "-122.75,36.8,-121.75,37.8"
+                     select strm)
+                    .startasync(async strm =>
+                    {
+                        console.writeline(strm.content + "\n");
+
+                        if (count++ >= 5)
+                            strm.closestream();
+                    });
+            }*/
+        }
+
+        public async static void testMethod2()
+        {
+            var auth = new SingleUserAuthorizer
+            {
+                CredentialStore = new SingleUserInMemoryCredentialStore
+                {
+                    ConsumerKey = ConfigurationManager.AppSettings["consumerKey"],
+                    ConsumerSecret = ConfigurationManager.AppSettings["consumerSecret"],
+                    AccessToken = ConfigurationManager.AppSettings["accessToken"],
+                    AccessTokenSecret = ConfigurationManager.AppSettings["accessTokenSecret"]
+                }
+            };
+            //Data
+            DateTime tfrom = new DateTime(2014,04,18), tto = new DateTime(2014,04,19);
+            String querry = "empathy";
+            ulong idfrom = 0, idto = 0;
+            
+            using (var twitterCtx = new TwitterContext(auth))
+            {
+                //Getting oldest tweet id from DateTime(tfrom)
+                //veikia nevisai tiksliai, nes reikia nurodyti pirma seniausia tweet'a 
+                //po tam tikros datos o nurodomas pirmas seniausias atitinkantis eilute: 
+                //su retesniais zodziais didesne paklaida (netikslus alltweets),
+                //nes nera(as bent neradau) kaip gauti pati seniausia pagal data bet 
+                //nenurodant eilutes
+                var searchResponse = await
+                    (from search in twitterCtx.Search
+                     where search.Type == SearchType.Search &&
+                           search.Query == "\"" + querry + "\"" &&
+                           search.Count == 1 &&
+                           search.Until == tfrom
+                     select search).SingleOrDefaultAsync();
+                if (searchResponse != null && searchResponse.Statuses != null)
+                    idfrom = searchResponse.Statuses.First().StatusID;
+
+                //Getting newest tweet id from DateTime(tto)
+                searchResponse = await
+                    (from search in twitterCtx.Search
+                     where search.Type == SearchType.Search &&
+                           search.Query == "\"" + querry + "\"" &&
+                           search.Count == 1 &&
+                           search.Until == tto
+                     select search).SingleOrDefaultAsync();
+                if (searchResponse != null && searchResponse.Statuses != null)
+                    idto = searchResponse.Statuses.First().StatusID;
+
+                ulong ourtweets = 0, alltweets = idto - idfrom;   //statistic data
+
+                Console.WriteLine("To:{0}", idto);
+
+                //Getting tweets that match search string
+                do
+                {
+                    searchResponse = await
+                        (from search in twitterCtx.Search
+                         where search.Type == SearchType.Search &&
+                               search.Query == "\"" + querry + "\"" &&
+                               search.Count == 100 &&
+                               search.SinceID == idfrom &&
+                               search.MaxID == idto
+                         select search).SingleOrDefaultAsync();
+                    if (searchResponse != null && searchResponse.Statuses != null)
+                    {
+                        searchResponse.Statuses.ForEach(tweet =>
+                            Console.WriteLine(
+                                "User:{0, 15},Date:{1, 21},ID:{2}",
+                                tweet.User.ScreenNameResponse,
+                                tweet.CreatedAt,
+                                tweet.StatusID
+                                ));
+                        if (searchResponse.Statuses.Count != 0 
+                            && idto != searchResponse.Statuses.Last().StatusID)
+                        {
+                            idto = searchResponse.Statuses.Last().StatusID;
+                            ourtweets = ourtweets + (ulong)searchResponse.Statuses.Count;
+                        }
+                        else { break; }
+                    }
+                    
+                    System.Threading.Thread.Sleep(2000);        // 450/15min = 1/2s 
+                } while (searchResponse.Statuses.Count != 0);
+                Console.WriteLine("Fr:{0}",idfrom);
+                Console.WriteLine("Tweets found: {0}/{1}", ourtweets, alltweets);
+                Console.WriteLine("Tweets according to string corresponds to {0}%", ourtweets/alltweets*100);
+                Console.WriteLine("DONE!!!");
+            }
+        }
+
         public async static void testMethod()
         {
             var auth = new SingleUserAuthorizer
@@ -55,24 +168,6 @@ namespace Business
                             tweet.Coordinates.Longitude
                             ));
             }
-            //using (var twitterCtx = new TwitterContext(auth)) { 
-            //Console.WriteLine("\nStreamed Content: \n");
-            //int count = 0;
-
-            //await
-            //    (from strm in twitterCtx.Streaming
-            //     where strm.Type == StreamingType.Filter &&
-            //           strm.Track == "twitter" &&
-            //           strm.Locations == "-122.75,36.8,-121.75,37.8"
-            //     select strm)
-            //    .StartAsync(async strm =>
-            //    {
-            //        Console.WriteLine(strm.Content + "\n");
-
-            //        if (count++ >= 5)
-            //            strm.CloseStream();
-            //    });
-            //}
         }
     }
 }

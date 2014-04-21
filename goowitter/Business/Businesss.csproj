@@ -85,6 +85,9 @@
     <Reference Include="System.Net.Http.WebRequest" />
     <Reference Include="System.Web" />
     <Reference Include="System.XML" />
+    <Reference Include="UserStreamsParser">
+      <HintPath>..\packages\userstreamex.1.0\lib\net40\UserStreamsParser.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5">
