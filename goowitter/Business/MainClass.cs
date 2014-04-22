@@ -102,16 +102,19 @@ namespace Business
                                search.Query == "\"" + querry + "\"" &&
                                search.Count == 100 &&
                                search.SinceID == idfrom &&
-                               search.MaxID == idto
+                               search.MaxID == idto &&
+                               search.GeoCode == "40.7142700,-74.0059700,10km"
                          select search).SingleOrDefaultAsync();
                     if (searchResponse != null && searchResponse.Statuses != null)
                     {
                         searchResponse.Statuses.ForEach(tweet =>
                             Console.WriteLine(
-                                "User:{0, 15},Date:{1, 21},ID:{2}",
+                                "User:{0, 15},Date:{1, 21},ID:{2},\nLoc:{3},Coord{4}",
                                 tweet.User.ScreenNameResponse,
                                 tweet.CreatedAt,
-                                tweet.StatusID
+                                tweet.StatusID,
+                                tweet.User.Location,
+                                tweet.Coordinates
                                 ));
                         if (searchResponse.Statuses.Count != 0 
                             && idto != searchResponse.Statuses.Last().StatusID)
